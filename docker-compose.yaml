@@ -6,7 +6,7 @@ services:
     pull_policy: always
     tty: true
     restart: unless-stopped
-    image: ollama/ollama
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
 
   open-webui:
     build:
@@ -14,7 +14,7 @@ services:
       args:
         OLLAMA_BASE_URL: '/ollama'
       dockerfile: Dockerfile
-    image: docker.io/library/open-webui
+    image: open-webui:${WEBUI_DOCKER_TAG-pymupdf}
     container_name: open-webui
     volumes:
       - open-webui:/app/backend/data
