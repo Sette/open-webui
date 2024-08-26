@@ -22,6 +22,7 @@ from langchain_community.document_loaders import (
     WebBaseLoader,
     TextLoader,
     PyPDFLoader,
+    PyMuPDFLoader,
     CSVLoader,
     BSHTMLLoader,
     Docx2txtLoader,
@@ -1118,7 +1119,7 @@ def get_loader(filename: str, file_content_type: str, file_path: str):
             loader = TikaLoader(file_path, file_content_type)
     else:
         if file_ext == "pdf":
-            loader = PyPDFLoader(
+            loader = PyMuPDFLoader(
                 file_path, extract_images=app.state.config.PDF_EXTRACT_IMAGES
             )
         elif file_ext == "csv":
