@@ -96,6 +96,8 @@ from config import (
     TIKA_SERVER_URL,
     RAG_TOP_K,
     RAG_RELEVANCE_THRESHOLD,
+    RAG_FILE_MAX_SIZE,
+    RAG_FILE_MAX_COUNT,
     RAG_EMBEDDING_ENGINE,
     RAG_EMBEDDING_MODEL,
     RAG_EMBEDDING_MODEL_AUTO_UPDATE,
@@ -144,6 +146,8 @@ app.state.config = AppConfig()
 
 app.state.config.TOP_K = RAG_TOP_K
 app.state.config.RELEVANCE_THRESHOLD = RAG_RELEVANCE_THRESHOLD
+app.state.config.FILE_MAX_SIZE = RAG_FILE_MAX_SIZE
+app.state.config.FILE_MAX_COUNT = RAG_FILE_MAX_COUNT
 
 app.state.config.ENABLE_RAG_HYBRID_SEARCH = ENABLE_RAG_HYBRID_SEARCH
 app.state.config.ENABLE_RAG_WEB_LOADER_SSL_VERIFICATION = (
@@ -394,6 +398,10 @@ async def get_rag_config(user=Depends(get_admin_user)):
     return {
         "status": True,
         "pdf_extract_images": app.state.config.PDF_EXTRACT_IMAGES,
+        "file": {
+            "max_size": app.state.config.FILE_MAX_SIZE,
+            "max_count": app.state.config.FILE_MAX_COUNT,
+        },
         "content_extraction": {
             "engine": app.state.config.CONTENT_EXTRACTION_ENGINE,
             "tika_server_url": app.state.config.TIKA_SERVER_URL,
@@ -425,6 +433,11 @@ async def get_rag_config(user=Depends(get_admin_user)):
             },
         },
     }
+
+
+class FileConfig(BaseModel):
+    max_size: Optional[int] = None
+    max_count: Optional[int] = None
 
 
 class ContentExtractionConfig(BaseModel):
@@ -465,6 +478,7 @@ class WebConfig(BaseModel):
 
 class ConfigUpdateForm(BaseModel):
     pdf_extract_images: Optional[bool] = None
+    file: Optional[FileConfig] = None
     content_extraction: Optional[ContentExtractionConfig] = None
     chunk: Optional[ChunkParamUpdateForm] = None
     youtube: Optional[YoutubeLoaderConfig] = None
@@ -478,6 +492,10 @@ async def update_rag_config(form_data: ConfigUpdateForm, user=Depends(get_admin_
         if form_data.pdf_extract_images is not None
         else app.state.config.PDF_EXTRACT_IMAGES
     )
+
+    if form_data.file is not None:
+        app.state.config.FILE_MAX_SIZE = form_data.file.max_size
+        app.state.config.FILE_MAX_COUNT = form_data.file.max_count
 
     if form_data.content_extraction is not None:
         log.info(f"Updating text settings: {form_data.content_extraction}")
@@ -520,6 +538,10 @@ async def update_rag_config(form_data: ConfigUpdateForm, user=Depends(get_admin_
     return {
         "status": True,
         "pdf_extract_images": app.state.config.PDF_EXTRACT_IMAGES,
+        "file": {
+            "max_size": app.state.config.FILE_MAX_SIZE,
+            "max_count": app.state.config.FILE_MAX_COUNT,
+        },
         "content_extraction": {
             "engine": app.state.config.CONTENT_EXTRACTION_ENGINE,
             "tika_server_url": app.state.config.TIKA_SERVER_URL,
@@ -591,6 +613,7 @@ async def update_query_settings(
     app.state.config.ENABLE_RAG_HYBRID_SEARCH = (
         form_data.hybrid if form_data.hybrid else False
     )
+
     return {
         "status": True,
         "template": app.state.config.RAG_TEMPLATE,
@@ -1374,12 +1397,12 @@ def scan_docs_dir(user=Depends(get_admin_user)):
     return True
 
 
-@app.get("/reset/db")
+@app.post("/reset/db")
 def reset_vector_db(user=Depends(get_admin_user)):
     CHROMA_CLIENT.reset()
 
 
-@app.get("/reset/uploads")
+@app.post("/reset/uploads")
 def reset_upload_dir(user=Depends(get_admin_user)) -> bool:
     folder = f"{UPLOAD_DIR}"
     try:
@@ -1403,7 +1426,7 @@ def reset_upload_dir(user=Depends(get_admin_user)) -> bool:
     return True
 
 
-@app.get("/reset")
+@app.post("/reset")
 def reset(user=Depends(get_admin_user)) -> bool:
     folder = f"{UPLOAD_DIR}"
     for filename in os.listdir(folder):
