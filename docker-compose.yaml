@@ -14,10 +14,10 @@ services:
       args:
         OLLAMA_BASE_URL: '/ollama'
       dockerfile: Dockerfile
-    image: open-webui:${WEBUI_DOCKER_TAG-pymupdf}
+    image: open-webui:${WEBUI_DOCKER_TAG}
     container_name: open-webui
     volumes:
-      - open-webui:/app/backend/data
+      - /home/ec2-user/data:/app/backend/data
     depends_on:
       - ollama
     ports:
