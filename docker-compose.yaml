@@ -14,7 +14,7 @@ services:
       args:
         OLLAMA_BASE_URL: '/ollama'
       dockerfile: Dockerfile
-    image: open-webui:${WEBUI_DOCKER_TAG}
+    image: ${WEBUI_DOCKER_IMAGE}:${WEBUI_DOCKER_TAG}
     container_name: open-webui
     volumes:
       - /home/ec2-user/data:/app/backend/data
