@@ -1,7 +1,7 @@
 services:
   ollama:
     volumes:
-      - ollama:/root/.ollama
+      - /home/ec2-user/openweb/ollama:/root/.ollama
     container_name: ollama
     pull_policy: always
     tty: true
@@ -17,7 +17,7 @@ services:
     image: ${WEBUI_DOCKER_IMAGE}:${WEBUI_DOCKER_TAG}
     container_name: open-webui
     volumes:
-      - /home/ec2-user/data:/app/backend/data
+      - /home/ec2-user/openweb/data:/app/backend/data
     depends_on:
       - ollama
     ports:
